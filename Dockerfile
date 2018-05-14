@@ -1,11 +1,10 @@
-FROM library/ubuntu:xenial AS build
+FROM library/ubuntu:bionic AS build
 
 ENV LANG=C.UTF-8
 
 RUN export DEBIAN_FRONTEND=noninteractive \
  && apt-get update \
  && apt-get install -y \
-        python-software-properties \
         software-properties-common \
         apt-utils
 
@@ -15,7 +14,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 
 RUN mkdir /build /rootfs
 WORKDIR /build
-RUN wget -nv https://github.com/krallin/tini/releases/download/v0.16.1/tini_0.16.1-amd64.deb
+RUN wget -nv https://github.com/krallin/tini/releases/download/v0.18.0/tini_0.18.0-amd64.deb
 RUN apt-get download \
         libselinux1 \
         libsemanage1 \
@@ -26,6 +25,7 @@ RUN apt-get download \
         libpam-modules-bin \
         libaudit1 \
         libaudit-common \
+        libcap-ng0 \
         libbz2-1.0 \
         libdb5.3 \
         libpcre3 \
