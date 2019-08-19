@@ -106,6 +106,9 @@ RUN rm -rf \
  && rm -rf \
         usr/share
 
+COPY init.sh etc/
+COPY init/ etc/init/
+
 WORKDIR /
 
 
@@ -117,4 +120,4 @@ COPY --from=build /rootfs /
 
 ENTRYPOINT ["tini", "--"]
 
-CMD ["sh"]
+CMD ["sh", "/etc/init.sh"]
