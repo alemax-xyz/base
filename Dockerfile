@@ -14,7 +14,6 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 
 RUN mkdir /build /rootfs
 WORKDIR /build
-RUN wget -nv https://github.com/krallin/tini/releases/download/v0.18.0/tini_0.18.0-amd64.deb
 RUN apt-get download \
         libselinux1 \
         libsemanage1 \
@@ -37,6 +36,7 @@ RUN apt-get download \
 RUN find *.deb | xargs -I % dpkg-deb -x % /rootfs
 
 WORKDIR /rootfs
+
 RUN rm -rf \
         etc/cron*/* \
         etc/cron*/.placeholder \
@@ -105,6 +105,9 @@ RUN rm -rf \
         % \
  && rm -rf \
         usr/share
+
+RUN wget -nv -O usr/bin/tini https://github.com/krallin/tini/releases/download/v0.18.0/tini-`dpkg --print-architecture` \
+ && chmod a+x usr/bin/tini
 
 COPY init.sh etc/
 COPY init/ etc/init/
