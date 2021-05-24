@@ -1,4 +1,4 @@
-FROM library/ubuntu:bionic AS build
+FROM library/ubuntu:focal AS build
 
 ENV LANG=C.UTF-8
 
@@ -28,6 +28,7 @@ RUN apt-get download \
         libbz2-1.0 \
         libdb5.3 \
         libpcre3 \
+        libpcre2-8-0 \
         libustr-1.0-1 \
         libpam-runtime \
         sudo \
@@ -104,9 +105,10 @@ RUN rm -rf \
         -e '/^[[:space:]]*$/d' \
         % \
  && rm -rf \
+        etc/default \
         usr/share
 
-RUN wget -nv -O usr/bin/tini https://github.com/krallin/tini/releases/download/v0.18.0/tini-`dpkg --print-architecture` \
+RUN wget --no-check-certificate -nv -O usr/bin/tini https://github.com/krallin/tini/releases/download/v0.19.0/tini-`dpkg --print-architecture` \
  && chmod a+x usr/bin/tini
 
 COPY init.sh etc/
