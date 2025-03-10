@@ -1,10 +1,10 @@
 ## Base image for other docker images
 
-The image contains [passwd](https://packages.ubuntu.com/focal/passwd), [sudo](https://packages.ubuntu.com/focal/sudo),
- [cron](https://packages.ubuntu.com/focal/cron) and [krallin/tini](https://github.com/krallin/tini) and is built on top
- of [clover/busybox](https://hub.docker.com/r/clover/busybox/).
+The image contains `passwd`, `sudo`, `cron` and [krallin/tini](https://github.com/krallin/tini).
+It is built on top of the [clover/busybox](https://hub.docker.com/r/clover/busybox/).
 
 ### Enviroment variables
+
 | Name | Default value | Description |
 |---|---|---|
 | `PUID` | `50` | Desired _UID_ of the process owner _*_ |

@@ -1,4 +1,4 @@
-FROM library/ubuntu:focal AS build
+FROM library/debian:stable-slim AS build
 
 ENV LANG=C.UTF-8
 
@@ -15,16 +15,18 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 RUN mkdir /build /rootfs
 WORKDIR /build
 RUN apt-get download \
+        zlib1g \
         libselinux1 \
-        libsemanage1 \
+        libsemanage2 \
         libsemanage-common \
-        libsepol1 \
+        libsepol2 \
         libpam0g \
         libpam-modules \
         libpam-modules-bin \
         libaudit1 \
         libaudit-common \
         libcap-ng0 \
+        libcap2 \
         libbz2-1.0 \
         libdb5.3 \
         libpcre3 \
@@ -33,7 +35,8 @@ RUN apt-get download \
         libpam-runtime \
         sudo \
         passwd \
-        cron
+        cron \
+        cron-daemon-common
 RUN find *.deb | xargs -I % dpkg-deb -x % /rootfs
 
 WORKDIR /rootfs
@@ -46,12 +49,14 @@ RUN rm -rf \
         etc/init.d \
         etc/security/namespace.init \
         etc/*/README \
+        etc/sudo_logsrvd.conf \
         sbin/shadowconfig \
         lib/systemd \
         usr/bin/tini-static \
         usr/include \
         usr/lib/tmpfiles.d \
         usr/lib/sudo/*.la \
+        usr/lib/systemd \
         usr/sbin/pam* \
         usr/share/apport \
         usr/share/bug \
@@ -62,7 +67,7 @@ RUN rm -rf \
  && mkdir -p \
         etc/skel \
  && sed -i -r \
-        's,test -x /usr/sbin/anacron [|][|] [(] | [)],,g' \
+        's,test -x /usr/sbin/anacron [|][|] [{] | ?;? ?[}],,g' \
         etc/crontab \
  && sed -i -r \
         -e '/^ *%.*$/d' \
