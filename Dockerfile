@@ -5,7 +5,6 @@ ENV LANG=C.UTF-8
 RUN export DEBIAN_FRONTEND=noninteractive \
  && apt-get update \
  && apt-get install -y \
-        software-properties-common \
         apt-utils
 
 RUN export DEBIAN_FRONTEND=noninteractive \
@@ -16,10 +15,14 @@ RUN mkdir /build /rootfs
 WORKDIR /build
 RUN apt-get download \
         zlib1g \
+        libapparmor1 \
+        libcrypt1 \
         libselinux1 \
         libsemanage2 \
         libsemanage-common \
         libsepol2 \
+        libssl3t64 \
+        libsystemd0 \
         libpam0g \
         libpam-modules \
         libpam-modules-bin \
@@ -28,11 +31,10 @@ RUN apt-get download \
         libcap-ng0 \
         libcap2 \
         libbz2-1.0 \
-        libdb5.3 \
-        libpcre3 \
+        libdb5.3t64 \
         libpcre2-8-0 \
-        libustr-1.0-1 \
         libpam-runtime \
+        libzstd1 \
         sudo \
         passwd \
         cron \
@@ -42,36 +44,26 @@ RUN find *.deb | xargs -I % dpkg-deb -x % /rootfs
 WORKDIR /rootfs
 
 RUN rm -rf \
-        etc/cron*/* \
         etc/cron*/.placeholder \
         etc/default/* \
-        etc/init \
         etc/init.d \
         etc/security/namespace.init \
         etc/*/README \
         etc/sudo_logsrvd.conf \
-        sbin/shadowconfig \
-        lib/systemd \
-        usr/bin/tini-static \
+        etc/supercat \
         usr/include \
-        usr/lib/tmpfiles.d \
-        usr/lib/sudo/*.la \
         usr/lib/systemd \
+        usr/lib/sysusers.d \
+        usr/lib/tmpfiles.d \
         usr/sbin/pam* \
-        usr/share/apport \
-        usr/share/bug \
-        usr/share/doc \
-        usr/share/lintian \
-        usr/share/man \
-        usr/share/pam/*.md5sums \
+        usr/sbin/shadowconfig \
  && mkdir -p \
         etc/skel \
  && sed -i -r \
-        's,test -x /usr/sbin/anacron [|][|] [{] | ?;? ?[}],,g' \
+        's,test -x /usr/sbin/anacron [|][|] [{] | ?;? ?[}]| --report,,g' \
         etc/crontab \
  && sed -i -r \
         -e '/^ *%.*$/d' \
-        -e 's,:/snap/bin,,g' \
         -e '/^[[:space:]]*Defaults[[:space:]]+mail_badpass.*$/d' \
         etc/sudoers \
  && sed \
@@ -95,7 +87,7 @@ RUN rm -rf \
         -e 's/\$session_nonint_additional/session required pam_unix.so/g' \
         usr/share/pam/common-session-noninteractive > etc/pam.d/common-session-noninteractive \
  && echo 'LANG=C.UTF-8' > etc/default/locale \
- && (echo '#!/bin/sh'; echo '/bin/vi $*') > usr/bin/sensible-editor \
+ && (echo '#!/bin/sh'; echo 'exec /bin/vi "$*"') > usr/bin/sensible-editor \
  && chmod +x usr/bin/sensible-editor \
  && find \
         etc/security/*.conf \
@@ -110,14 +102,12 @@ RUN rm -rf \
         -e '/^[[:space:]]*$/d' \
         % \
  && rm -rf \
-        etc/default \
         usr/share
 
 RUN wget --no-check-certificate -nv -O usr/bin/tini https://github.com/krallin/tini/releases/download/v0.19.0/tini-`dpkg --print-architecture` \
  && chmod a+x usr/bin/tini
 
-COPY init.sh etc/
-COPY init/ etc/init/
+COPY etc/ etc/
 
 WORKDIR /
 
