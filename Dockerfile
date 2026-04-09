@@ -15,7 +15,9 @@ RUN mkdir /build /rootfs
 WORKDIR /build
 RUN apt-get download \
         zlib1g \
+        libacl1 \
         libapparmor1 \
+        libattr1 \
         libbsd0 \
         libcrypt1 \
         libmd0 \
