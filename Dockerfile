@@ -16,7 +16,9 @@ WORKDIR /build
 RUN apt-get download \
         zlib1g \
         libapparmor1 \
+        libbsd0 \
         libcrypt1 \
+        libmd0 \
         libselinux1 \
         libsemanage2 \
         libsemanage-common \
