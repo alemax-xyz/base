@@ -3,9 +3,7 @@ FROM library/debian:stable-slim AS build
 ENV LANG=C.UTF-8
 
 RUN export DEBIAN_FRONTEND=noninteractive \
- && apt-get update \
- && apt-get install -y \
-        apt-utils
+ && apt-get update
 
 RUN export DEBIAN_FRONTEND=noninteractive \
  && apt-get install -y \
@@ -43,7 +41,7 @@ RUN apt-get download \
         passwd \
         cron \
         cron-daemon-common
-RUN find *.deb | xargs -I % dpkg-deb -x % /rootfs
+RUN find . -name '*.deb' -exec dpkg-deb -x {} /rootfs \;
 
 WORKDIR /rootfs
 
@@ -122,6 +120,6 @@ ENV LANG=C.UTF-8
 
 COPY --from=build /rootfs /
 
-ENTRYPOINT ["tini", "--"]
+ENTRYPOINT ["tini", "--", "sh", "/etc/entrypoint.sh"]
 
 CMD ["sh", "/etc/init.sh"]
