@@ -1,0 +1,4 @@
+#!/bin/sh
+
+for FILE in /etc/run.d/*.sh; do [ -e "$FILE" ] && . "${FILE}"; done
+wait

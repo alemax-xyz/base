@@ -45,7 +45,8 @@ RUN find . -name '*.deb' -exec dpkg-deb -x {} /rootfs \;
 
 WORKDIR /rootfs
 
-RUN rm -rf \
+RUN wget --no-check-certificate -nv -O usr/bin/tini https://github.com/krallin/tini/releases/download/v0.19.0/tini-`dpkg --print-architecture` \
+ && rm -rf \
         etc/cron*/.placeholder \
         etc/default/* \
         etc/init.d \
@@ -61,6 +62,7 @@ RUN rm -rf \
         usr/sbin/shadowconfig \
  && mkdir -p \
         etc/skel \
+        etc/environment.d \
  && sed -i -r \
         's,test -x /usr/sbin/anacron [|][|] [{] | ?;? ?[}]| --report,,g' \
         etc/crontab \
@@ -104,10 +106,8 @@ RUN rm -rf \
         -e '/^[[:space:]]*$/d' \
         % \
  && rm -rf \
-        usr/share
-
-RUN wget --no-check-certificate -nv -O usr/bin/tini https://github.com/krallin/tini/releases/download/v0.19.0/tini-`dpkg --print-architecture` \
- && chmod a+x usr/bin/tini
+        usr/share \
+ && chmod a+x,u+s,g+s usr/bin/tini
 
 COPY etc/ etc/
 
@@ -116,10 +116,10 @@ WORKDIR /
 
 FROM clover/busybox
 
-ENV LANG=C.UTF-8
+ENV LANG=C.UTF-8 TINI_KILL_PROCESS_GROUP=1
 
 COPY --from=build /rootfs /
 
-ENTRYPOINT ["tini", "--", "sh", "/etc/entrypoint.sh"]
+ENTRYPOINT ["/etc/entrypoint"]
 
-CMD ["sh", "/etc/init.sh"]
+CMD ["/etc/run"]

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+for FILE in /etc/init.d/*; do [ -e "$FILE" ] && . "$FILE"; done
+[ $# -lt 1 ] && set -- sh
+exec "$@"
