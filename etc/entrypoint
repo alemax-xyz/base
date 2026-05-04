@@ -2,5 +2,5 @@
 
 set -a; for FILE in /etc/environment /etc/environment.d/*.conf; do [ -e "$FILE" ] && . "$FILE"; done; set +a
 [ $# -lt 1 ] && set -- sh
-[ $$ -eq 1 ] && set -- /usr/bin/tini -- /etc/init "$@"
+[ $$ -eq 1 -o "$(IFS= read -r -d '' INIT < /proc/1/cmdline; echo "$INIT")" != "/usr/bin/tini" ] && set -- /usr/bin/tini -- /etc/init "$@"
 exec "$@"
