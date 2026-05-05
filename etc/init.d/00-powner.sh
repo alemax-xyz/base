@@ -68,6 +68,6 @@ export PUID PGID PUSER PGROUP
 su -p -s /bin/sh -c 'cat > /etc/environment.d/00-powner.conf' <<-EOF
 	PUID=$PUID
 	PGID=$PGID
-	PUSER=$PUSER
-	PGROUP=$PGROUP
+	PUSER="$PUSER"
+	PGROUP="$PGROUP"
 EOF
