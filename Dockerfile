@@ -31,6 +31,7 @@ WORKDIR /rootfs
 
 RUN wget -nv -O usr/bin/tini "https://github.com/krallin/tini/releases/download/v0.19.0/tini-$(dpkg --print-architecture)" \
  && chmod a+x,u+s,g+s usr/bin/tini \
+ && printf '%s\n' 'tini=0.19.0' \
  && rm -rf \
         etc/init.d \
         etc/security/namespace.init \
