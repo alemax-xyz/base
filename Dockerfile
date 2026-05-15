@@ -1,71 +1,51 @@
+# syntax=docker/dockerfile:1.17
+
 FROM library/debian:stable-slim AS build
 
 ENV LANG=C.UTF-8
 
 RUN export DEBIAN_FRONTEND=noninteractive \
- && apt-get update
+ && apt-get update \
+ && apt-get install -y wget openssl ca-certificates
 
-RUN export DEBIAN_FRONTEND=noninteractive \
- && apt-get install -y \
-        wget
+ADD https://github.com/alemax-xyz/apt-sandbox.git#main /usr/local/bin/
 
-RUN mkdir /build /rootfs
-WORKDIR /build
-RUN apt-get download \
-        zlib1g \
-        libacl1 \
-        libapparmor1 \
-        libattr1 \
-        libbsd0 \
-        libcrypt1 \
-        libmd0 \
-        libselinux1 \
-        libsemanage2 \
-        libsemanage-common \
-        libsepol2 \
-        libssl3t64 \
-        libsystemd0 \
-        libpam0g \
-        libpam-modules \
-        libpam-modules-bin \
-        libaudit1 \
-        libaudit-common \
-        libcap-ng0 \
-        libcap2 \
-        libbz2-1.0 \
-        libdb5.3t64 \
-        libpcre2-8-0 \
-        libpam-runtime \
-        libzstd1 \
-        sudo \
-        passwd \
-        cron \
-        cron-daemon-common
-RUN find . -name '*.deb' -exec dpkg-deb -x {} /rootfs \;
+RUN mkdir -p /build /rootfs
+
+COPY build/ build/
+
+COPY --from=clover/busybox:latest /var/lib/packages/ /build/var/lib/packages/
+
+RUN apt-sandbox --install --verstamp \
+        --apt-config APT::Install-Recommends=false \
+        --repository /build \
+        --keyring /build \
+        --installed /build/var/lib/packages \
+        --obsolete /build/packages.obsolete \
+        --required /build/packages.required
 
 WORKDIR /rootfs
 
-RUN wget --no-check-certificate -nv -O usr/bin/tini https://github.com/krallin/tini/releases/download/v0.19.0/tini-`dpkg --print-architecture` \
+RUN wget -nv -O usr/bin/tini "https://github.com/krallin/tini/releases/download/v0.19.0/tini-$(dpkg --print-architecture)" \
+ && chmod a+x,u+s,g+s usr/bin/tini \
+ && printf '%s\n' "tini=0.19.0" > var/lib/packages/tini \
  && rm -rf \
-        etc/cron*/.placeholder \
-        etc/default/* \
         etc/init.d \
         etc/security/namespace.init \
         etc/*/README \
         etc/sudo_logsrvd.conf \
-        etc/supercat \
         usr/include \
         usr/lib/systemd \
-        usr/lib/sysusers.d \
         usr/lib/tmpfiles.d \
-        usr/sbin/pam* \
-        usr/sbin/shadowconfig \
  && mkdir -p \
         etc/skel \
         etc/environment.d \
- && sed -i -r \
-        's,test -x /usr/sbin/anacron [|][|] [{] | ?;? ?[}]| --report,,g' \
-        etc/crontab \
+        etc/cron.hourly \
+        etc/cron.daily \
+        etc/cron.weekly \
+        etc/cron.monthly \
+ && ln -s /var/spool/cron/crontabs etc/cron.d \
+ && ln -s /var/spool/cron/crontabs/root etc/crontab \
  && sed -i -r \
         -e '/^ *%.*$/d' \
         -e '/^[[:space:]]*Defaults[[:space:]]+mail_badpass.*$/d' \
@@ -90,14 +70,10 @@ RUN wget --no-check-certificate -nv -O usr/bin/tini https://github.com/krallin/t
         -e 's/\$session_nonint_primary/session [default=1] pam_permit.so/g' \
         -e 's/\$session_nonint_additional/session required pam_unix.so/g' \
         usr/share/pam/common-session-noninteractive > etc/pam.d/common-session-noninteractive \
- && echo 'LANG=C.UTF-8' > etc/default/locale \
- && (echo '#!/bin/sh'; echo 'exec /bin/vi "$*"') > usr/bin/sensible-editor \
- && chmod +x usr/bin/sensible-editor \
  && find \
         etc/security/*.conf \
         etc/selinux/*.conf \
         etc/*.conf \
-        etc/crontab \
         etc/pam.d/* \
         etc/sudoers \
     | xargs -I % sed -i -r \
@@ -105,18 +81,16 @@ RUN wget --no-check-certificate -nv -O usr/bin/tini https://github.com/krallin/t
         -e 's,[[:space:]]+, ,g' \
         -e '/^[[:space:]]*$/d' \
         % \
- && rm -rf \
-        usr/share \
- && chmod a+x,u+s,g+s usr/bin/tini
+ && rm -rf usr/share
 
-COPY etc/ etc/
+COPY rootfs/ ./
 
 WORKDIR /
 
-
 FROM clover/busybox
 
-ENV LANG=C.UTF-8 TINI_KILL_PROCESS_GROUP=1
+ENV LANG=C.UTF-8 \
+    TINI_KILL_PROCESS_GROUP=1
 
 COPY --from=build /rootfs /
 
