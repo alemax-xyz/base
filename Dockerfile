@@ -2,7 +2,8 @@
 
 FROM library/debian:stable-slim AS build
 
-ENV LANG=C.UTF-8
+ENV LANG=C.UTF-8 \
+    SANDBOX_ROOT=/
 
 RUN export DEBIAN_FRONTEND=noninteractive \
  && apt-get update \
@@ -12,17 +13,19 @@ ADD https://github.com/alemax-xyz/apt-sandbox.git#main /usr/local/bin/
 
 RUN mkdir -p /build /rootfs
 
-COPY build/ build/
+WORKDIR /build
 
-COPY --from=clover/busybox:latest /var/lib/packages/ /build/var/lib/packages/
+COPY build/ .
+
+COPY --from=clover/busybox:latest /var/lib/packages/ var/lib/packages/
 
 RUN apt-sandbox --install --verstamp \
         --apt-config APT::Install-Recommends=false \
-        --repository /build \
-        --keyring /build \
-        --installed /build/var/lib/packages \
-        --obsolete /build/packages.obsolete \
-        --required /build/packages.required
+        --repository . \
+        --keyring . \
+        --installed var/lib/packages \
+        --obsolete packages.obsolete \
+        --required packages.required
 
 WORKDIR /rootfs
 
