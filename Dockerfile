@@ -9,7 +9,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
  && apt-get update \
  && apt-get install -y wget openssl ca-certificates
 
-ADD https://github.com/alemax-xyz/apt-sandbox.git#main /usr/local/bin/
+ADD https://github.com/alemax-xyz/docker-tools.git#main /usr/local/bin/
 
 RUN mkdir -p /build /rootfs
 
