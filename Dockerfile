@@ -20,7 +20,9 @@ COPY build/ .
 COPY --from=clover/busybox:latest /var/lib/packages/ var/lib/packages/
 
 RUN apt-sandbox --install --verstamp \
-        --apt-config APT::Install-Recommends=false APT::Get::Upgrade==false \
+        --apt-config \
+            APT::Install-Recommends=false \
+            APT::Get::Upgrade==false \
         --repository . \
         --keyring . \
         --installed var/lib/packages \
@@ -73,17 +75,15 @@ RUN wget -nv -O usr/bin/tini "https://github.com/krallin/tini/releases/download/
         -e 's/\$session_nonint_primary/session [default=1] pam_permit.so/g' \
         -e 's/\$session_nonint_additional/session required pam_unix.so/g' \
         usr/share/pam/common-session-noninteractive > etc/pam.d/common-session-noninteractive \
- && find \
+ && sed -i -E \
+        -e 's,^[[:space:]]*[#]+.*$,,g' \
+        -e 's,[[:space:]]+, ,g' \
+        -e '/^[[:space:]]*$/d' \
         etc/security/*.conf \
         etc/selinux/*.conf \
         etc/*.conf \
         etc/pam.d/* \
         etc/sudoers \
-    | xargs -I % sed -i -r \
-        -e 's,^[[:space:]]*[#]+.*$,,g' \
-        -e 's,[[:space:]]+, ,g' \
-        -e '/^[[:space:]]*$/d' \
-        % \
  && rm -rf usr/share
 
 COPY rootfs/ ./
