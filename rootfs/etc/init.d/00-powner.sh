@@ -28,8 +28,8 @@ if [ -z "$PUID_NAME" ]; then
 		suexec groupadd --gid $PGID --system "$PGROUP" || exit 3
 		suexec useradd --home=/ --no-create-home --system --uid $PUID --no-log-init --gid $PGID "$PUSER" || exit 4
 	else
-		PUSER="$USER_NAME"
-		suexec usermod --uid $PUID "$PUSER" || exit 5
+		[ -z "$PUSER" ] && PUSER="$USER_NAME"
+		suexec usermod --uid $PUID -l "$PUSER" "$USER_NAME" || exit 5
 	fi
 elif [ -z "$PUSER" ]; then
 	PUSER="$PUID_NAME"
@@ -51,8 +51,8 @@ if [ -z "$PGID_NAME" ]; then
 		[ -z "$PGROUP" ] && PGROUP=docker
 		suexec groupadd --gid $PGID --system "$PGROUP" || exit 8
 	else
-		PGROUP="$GROUP_NAME"
-		suexec groupmod --gid $PGID "$PGROUP" || exit 9
+		[ -z "$PGROUP" ] && PGROUP="$GROUP_NAME"
+		suexec groupmod --gid $PGID -n "$PGROUP" "$GROUP_NAME" || exit 9
 	fi
 elif [ -z "$PGROUP" ]; then
 	PGROUP="$PGID_NAME"
